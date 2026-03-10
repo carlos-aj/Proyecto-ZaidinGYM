@@ -15,6 +15,9 @@ class ZaidinGym:
         lista_usuarios_total = []
         lista_actividades_total = []
         
+        # Cargar datos iniciales de prueba
+        ZaidinGym.cargar_datos_iniciales(lista_usuarios_total, lista_actividades_total)
+        
         while True:
             ZaidinGym.mostrar_menu()
             opcion = input("\nSeleccione una opción: ").strip()
@@ -23,7 +26,7 @@ class ZaidinGym:
                 ZaidinGym.menu_gestion_usuarios(lista_usuarios_total, lista_actividades_total)
                 
             elif opcion == "2":
-                ZaidinGym.menu_gestion_actividades(lista_actividades_total)
+                ZaidinGym.menu_gestion_actividades(lista_actividades_total, lista_usuarios_total)
                 
             elif opcion == "3":
                 ZaidinGym.menu_consultas_estadisticas(lista_usuarios_total, lista_actividades_total)
@@ -38,7 +41,90 @@ class ZaidinGym:
 
     @staticmethod
     def cargar_datos_iniciales(lista_usuarios_total: list, lista_actividades_total: list) -> None:
-        """Carga datos iniciales de prueba en las listas de usuarios y actividades"""
+        """Carga datos iniciales de prueba en las listas de usuarios y actividades
+        Args:
+            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            lista_actividades_total (list): La lista de actividades disponibles en el gimnasio.
+        """
+        print("Cargando datos iniciales de prueba...")
+        
+        try:
+            # Crear actividades de prueba
+            actividades_datos = [
+                ("Yoga Matutino", 60, 250, Especialidad.CORE, False, [8, 9, 7, 8, 9]),
+                ("Aqua Aeróbicos", 45, 300, Especialidad.PISCINA, True, [9, 8, 10, 7]),
+                ("CrossFit Intensivo", 50, 450, Especialidad.FITNESS, True, [10, 9, 8, 9, 10]),
+                ("Spinning", 45, 400, Especialidad.CICLISMO, False, [8, 7, 9, 8]),
+                ("HIIT Cardio", 30, 350, Especialidad.HIIT, False, [9, 8, 7, 9, 8]),
+                ("Zumba", 55, 320, Especialidad.BAILE, False, [10, 9, 8, 9]),
+                ("Pilates", 50, 200, Especialidad.CORE, False, [8, 9, 7, 8]),
+                ("Body Pump", 60, 380, Especialidad.FITNESS, False, [9, 8, 9, 7]),
+                ("Aqua Zumba", 45, 280, Especialidad.PISCINA, True, [8, 9, 10]),
+                ("Stretching", 30, 150, Especialidad.BODYCARE, False, [7, 8, 9]),
+                ("Cardio Dance", 40, 300, Especialidad.CARDIO, False, [9, 8, 7, 8]),
+                ("Natación Libre", 60, 400, Especialidad.PISCINA, True, [9, 10, 8])
+            ]
+            
+            for nombre, duracion, calorias, categoria, premium, votos in actividades_datos:
+                actividad = Actividad(nombre, duracion, calorias, categoria, premium, votos)
+                lista_actividades_total.append(actividad)
+            
+            # Crear monitores de prueba
+            monitores_datos = [
+                ("Ana García López", "12345678Z", "Calle Granada 15", "Granada", "Granada", "18001", "666111222", date(1985, 3, 20), ["FITNESS", "CORE"], 2200.0, 15, 2),
+                ("Carlos Ruiz Martín", "87654321X", "Avenida Constitución 45", "Granada", "Granada", "18002", "666333444", date(1990, 7, 12), ["PISCINA"], 2000.0, 20, 1),
+                ("María Fernández Gil", "11223344B", "Plaza Nueva 8", "Granada", "Granada", "18003", "666555777", date(1988, 11, 5), ["BAILE", "CARDIO"], 2100.0, 18, 3),
+                ("Pedro Sánchez Vega", "55667788Z", "Calle Recogidas 23", "Granada", "Granada", "18004", "666888999", date(1982, 2, 28), ["CICLISMO", "HIIT"], 2300.0, 12, 0),
+                ("Laura Jiménez Ramos", "99887766P", "Paseo del Salón 12", "Granada", "Granada", "18005", "666222333", date(1992, 9, 18), ["BODYCARE"], 1900.0, 10, 1)
+            ]
+            
+            for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, especialidades, sueldo, pos, neg in monitores_datos:
+                monitor = Monitor(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, especialidades, sueldo, pos, neg)
+                lista_usuarios_total.append(monitor)
+            
+            # Crear socios regulares de prueba
+            socios_datos = [
+                ("Juan Pérez Morales", "22334455Y", "Calle Albaicín 30", "Granada", "Granada", "18006", "666444555", date(1995, 5, 10), date(2023, 1, 15), date(2026, 3, 5), True),
+                ("Carmen López Silva", "33445566R", "Avenida Madrid 67", "Granada", "Granada", "18007", "666777888", date(1987, 8, 22), date(2023, 2, 20), date(2026, 2, 28), True),
+                ("Roberto García Díaz", "44556677L", "Calle Elvira 45", "Granada", "Granada", "18008", "666999000", date(1993, 12, 8), date(2023, 3, 10), date(2025, 12, 20), False),
+                ("Isabel Martín Cruz", "56789012B", "Plaza Trinidad 18", "Granada", "Granada", "18009", "666111333", date(1990, 4, 15), date(2023, 4, 5), date(2026, 3, 1), True),
+                ("Miguel Rodríguez Font", "66778899D", "Calle Mesones 22", "Granada", "Granada", "18010", "666222444", date(1985, 10, 30), date(2023, 5, 12), date(2026, 1, 15), True)
+            ]
+            
+            for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo in socios_datos:
+                socio = Socio(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo)
+                # Asignar algunas actividades a los socios
+                if len(lista_actividades_total) > 0:
+                    socio.add_actvidad(lista_actividades_total[0])  # Yoga
+                if len(lista_actividades_total) > 4:
+                    socio.add_actvidad(lista_actividades_total[4])  # HIIT Cardio
+                lista_usuarios_total.append(socio)
+            
+            # Crear socios premium de prueba
+            from socioPremium import SocioPremium
+            socios_premium_datos = [
+                ("Elena Vázquez Herrera", "77889900D", "Calle Alhambra 88", "Granada", "Granada", "18011", "666333555", date(1989, 6, 25), date(2023, 1, 20), date(2026, 3, 8), True),
+                ("Francisco Molina Reyes", "88990011K", "Avenida Andalucía 150", "Granada", "Granada", "18012", "666444777", date(1983, 3, 14), date(2023, 2, 15), date(2026, 3, 9), True),
+                ("Rocío Castillo Navarro", "99001122Z", "Calle San Jerónimo 35", "Granada", "Granada", "18013", "666555888", date(1991, 9, 7), date(2023, 3, 25), date(2026, 2, 25), True)
+            ]
+            
+            for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo in socios_premium_datos:
+                socio_premium = SocioPremium(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo)
+                # Los socios premium pueden tener actividades premium
+                if len(lista_actividades_total) > 1:
+                    socio_premium.add_actvidad(lista_actividades_total[1])  # Aqua Aeróbicos (premium)
+                if len(lista_actividades_total) > 2:
+                    socio_premium.add_actvidad(lista_actividades_total[2])  # CrossFit Intensivo (premium)
+                if len(lista_actividades_total) > 6:
+                    socio_premium.add_actvidad(lista_actividades_total[6])  # Pilates
+                lista_usuarios_total.append(socio_premium)
+            
+        except Exception as e:
+            print(f"Error cargando datos iniciales: {e}")
+            # Si hay error, crear al menos datos mínimos
+            if not lista_actividades_total:
+                actividad_basica = Actividad("Actividad Básica", 30, 200, Especialidad.FITNESS, False, [])
+                lista_actividades_total.append(actividad_basica)
 
     @staticmethod
     def mostrar_menu() -> None:
@@ -264,10 +350,11 @@ class ZaidinGym:
                 input("Presione Enter para continuar...")
 
     @staticmethod
-    def menu_gestion_actividades(lista_actividades_total: list) -> None:
+    def menu_gestion_actividades(lista_actividades_total: list, lista_usuarios_total: list) -> None:
         """Muestra el menú de gestión de actividades.
         Args:
             lista_actividades_total (list): La lista de actividades del gimnasio.
+            lista_usuarios_total (list): La lista de usuarios del gimnasio.
         """
         while True:
             print("\n" + "-"*40)
