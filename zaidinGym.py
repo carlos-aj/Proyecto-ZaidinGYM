@@ -3,6 +3,7 @@ from monitor import Monitor
 from socio import Socio
 from socioPremium import SocioPremium
 from actividad import Actividad, Especialidad
+from database import DatabaseManager
 
 from datetime import date, datetime
 import re
@@ -12,24 +13,32 @@ class ZaidinGym:
     
     @staticmethod
     def main() -> None:
-        lista_usuarios_total = []
-        lista_actividades_total = []
+        # Inicializar base de datos
+        db_manager = DatabaseManager()
         
-        # Cargar datos iniciales de prueba
-        ZaidinGym.cargar_datos_iniciales(lista_usuarios_total, lista_actividades_total)
+        # Cargar datos iniciales si es la primera vez
+        db_manager.cargar_datos_iniciales()
+        
+        # ============= CÓDIGO ANTERIOR =============
+        # lista_usuarios_total = []
+        # lista_actividades_total = []
+        # 
+        # # Cargar datos iniciales de prueba
+        # ZaidinGym.cargar_datos_iniciales(lista_usuarios_total, lista_actividades_total)
+        # =======================================================
         
         while True:
             ZaidinGym.mostrar_menu()
             opcion = input("\nSeleccione una opción: ").strip()
             
             if opcion == "1":
-                ZaidinGym.menu_gestion_usuarios(lista_usuarios_total, lista_actividades_total)
+                ZaidinGym.menu_gestion_usuarios(db_manager)
                 
             elif opcion == "2":
-                ZaidinGym.menu_gestion_actividades(lista_actividades_total, lista_usuarios_total)
+                ZaidinGym.menu_gestion_actividades(db_manager)
                 
             elif opcion == "3":
-                ZaidinGym.menu_consultas_estadisticas(lista_usuarios_total, lista_actividades_total)
+                ZaidinGym.menu_consultas_estadisticas(db_manager)
                 
             elif opcion == "4":
                 print("\nGracias por usar ZaidinGYM. Hasta luego.")
@@ -39,92 +48,94 @@ class ZaidinGym:
                 print("Opción no válida. Por favor, seleccione una opción del 1 al 4.")
                 input("Presione Enter para continuar...")
 
-    @staticmethod
-    def cargar_datos_iniciales(lista_usuarios_total: list, lista_actividades_total: list) -> None:
-        """Carga datos iniciales de prueba en las listas de usuarios y actividades
-        Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
-            lista_actividades_total (list): La lista de actividades disponibles en el gimnasio.
-        """
-        print("Cargando datos iniciales de prueba...")
-        
-        try:
-            # Crear actividades de prueba
-            actividades_datos = [
-                ("Yoga Matutino", 60, 250, Especialidad.CORE, False, [8, 9, 7, 8, 9]),
-                ("Aqua Aeróbicos", 45, 300, Especialidad.PISCINA, True, [9, 8, 10, 7]),
-                ("CrossFit Intensivo", 50, 450, Especialidad.FITNESS, True, [10, 9, 8, 9, 10]),
-                ("Spinning", 45, 400, Especialidad.CICLISMO, False, [8, 7, 9, 8]),
-                ("HIIT Cardio", 30, 350, Especialidad.HIIT, False, [9, 8, 7, 9, 8]),
-                ("Zumba", 55, 320, Especialidad.BAILE, False, [10, 9, 8, 9]),
-                ("Pilates", 50, 200, Especialidad.CORE, False, [8, 9, 7, 8]),
-                ("Body Pump", 60, 380, Especialidad.FITNESS, False, [9, 8, 9, 7]),
-                ("Aqua Zumba", 45, 280, Especialidad.PISCINA, True, [8, 9, 10]),
-                ("Stretching", 30, 150, Especialidad.BODYCARE, False, [7, 8, 9]),
-                ("Cardio Dance", 40, 300, Especialidad.CARDIO, False, [9, 8, 7, 8]),
-                ("Natación Libre", 60, 400, Especialidad.PISCINA, True, [9, 10, 8])
-            ]
-            
-            for nombre, duracion, calorias, categoria, premium, votos in actividades_datos:
-                actividad = Actividad(nombre, duracion, calorias, categoria, premium, votos)
-                lista_actividades_total.append(actividad)
-            
-            # Crear monitores de prueba
-            monitores_datos = [
-                ("Ana García López", "12345678Z", "Calle Granada 15", "Granada", "Granada", "18001", "666111222", date(1985, 3, 20), ["FITNESS", "CORE"], 2200.0, 15, 2),
-                ("Carlos Ruiz Martín", "87654321X", "Avenida Constitución 45", "Granada", "Granada", "18002", "666333444", date(1990, 7, 12), ["PISCINA"], 2000.0, 20, 1),
-                ("María Fernández Gil", "11223344B", "Plaza Nueva 8", "Granada", "Granada", "18003", "666555777", date(1988, 11, 5), ["BAILE", "CARDIO"], 2100.0, 18, 3),
-                ("Pedro Sánchez Vega", "55667788Z", "Calle Recogidas 23", "Granada", "Granada", "18004", "666888999", date(1982, 2, 28), ["CICLISMO", "HIIT"], 2300.0, 12, 0),
-                ("Laura Jiménez Ramos", "99887766P", "Paseo del Salón 12", "Granada", "Granada", "18005", "666222333", date(1992, 9, 18), ["BODYCARE"], 1900.0, 10, 1)
-            ]
-            
-            for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, especialidades, sueldo, pos, neg in monitores_datos:
-                monitor = Monitor(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, especialidades, sueldo, pos, neg)
-                lista_usuarios_total.append(monitor)
-            
-            # Crear socios regulares de prueba
-            socios_datos = [
-                ("Juan Pérez Morales", "22334455Y", "Calle Albaicín 30", "Granada", "Granada", "18006", "666444555", date(1995, 5, 10), date(2023, 1, 15), date(2026, 3, 5), True),
-                ("Carmen López Silva", "33445566R", "Avenida Madrid 67", "Granada", "Granada", "18007", "666777888", date(1987, 8, 22), date(2023, 2, 20), date(2026, 2, 28), True),
-                ("Roberto García Díaz", "44556677L", "Calle Elvira 45", "Granada", "Granada", "18008", "666999000", date(1993, 12, 8), date(2023, 3, 10), date(2025, 12, 20), False),
-                ("Isabel Martín Cruz", "56789012B", "Plaza Trinidad 18", "Granada", "Granada", "18009", "666111333", date(1990, 4, 15), date(2023, 4, 5), date(2026, 3, 1), True),
-                ("Miguel Rodríguez Font", "66778899D", "Calle Mesones 22", "Granada", "Granada", "18010", "666222444", date(1985, 10, 30), date(2023, 5, 12), date(2026, 1, 15), True)
-            ]
-            
-            for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo in socios_datos:
-                socio = Socio(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo)
-                # Asignar algunas actividades a los socios
-                if len(lista_actividades_total) > 0:
-                    socio.add_actvidad(lista_actividades_total[0])  # Yoga
-                if len(lista_actividades_total) > 4:
-                    socio.add_actvidad(lista_actividades_total[4])  # HIIT Cardio
-                lista_usuarios_total.append(socio)
-            
-            # Crear socios premium de prueba
-            from socioPremium import SocioPremium
-            socios_premium_datos = [
-                ("Elena Vázquez Herrera", "77889900D", "Calle Alhambra 88", "Granada", "Granada", "18011", "666333555", date(1989, 6, 25), date(2023, 1, 20), date(2026, 3, 8), True),
-                ("Francisco Molina Reyes", "88990011K", "Avenida Andalucía 150", "Granada", "Granada", "18012", "666444777", date(1983, 3, 14), date(2023, 2, 15), date(2026, 3, 9), True),
-                ("Rocío Castillo Navarro", "99001122Z", "Calle San Jerónimo 35", "Granada", "Granada", "18013", "666555888", date(1991, 9, 7), date(2023, 3, 25), date(2026, 2, 25), True)
-            ]
-            
-            for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo in socios_premium_datos:
-                socio_premium = SocioPremium(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo)
-                # Los socios premium pueden tener actividades premium
-                if len(lista_actividades_total) > 1:
-                    socio_premium.add_actvidad(lista_actividades_total[1])  # Aqua Aeróbicos (premium)
-                if len(lista_actividades_total) > 2:
-                    socio_premium.add_actvidad(lista_actividades_total[2])  # CrossFit Intensivo (premium)
-                if len(lista_actividades_total) > 6:
-                    socio_premium.add_actvidad(lista_actividades_total[6])  # Pilates
-                lista_usuarios_total.append(socio_premium)
-            
-        except Exception as e:
-            print(f"Error cargando datos iniciales: {e}")
-            # Si hay error, crear al menos datos mínimos
-            if not lista_actividades_total:
-                actividad_basica = Actividad("Actividad Básica", 30, 200, Especialidad.FITNESS, False, [])
-                lista_actividades_total.append(actividad_basica)
+    # ============= CÓDIGO ANTERIOR =============
+    # @staticmethod
+    # def cargar_datos_iniciales(lista_usuarios_total: list, lista_actividades_total: list) -> None:
+    #     """Carga datos iniciales de prueba en las listas de usuarios y actividades
+    #     Args:
+    #         lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+    #         lista_actividades_total (list): La lista de actividades disponibles en el gimnasio.
+    #     """
+    #     print("Cargando datos iniciales de prueba...")
+    #     
+    #     try:
+    #         # Crear actividades de prueba
+    #         actividades_datos = [
+    #             ("Yoga Matutino", 60, 250, Especialidad.CORE, False, [8, 9, 7, 8, 9]),
+    #             ("Aqua Aeróbicos", 45, 300, Especialidad.PISCINA, True, [9, 8, 10, 7]),
+    #             ("CrossFit Intensivo", 50, 450, Especialidad.FITNESS, True, [10, 9, 8, 9, 10]),
+    #             ("Spinning", 45, 400, Especialidad.CICLISMO, False, [8, 7, 9, 8]),
+    #             ("HIIT Cardio", 30, 350, Especialidad.HIIT, False, [9, 8, 7, 9, 8]),
+    #             ("Zumba", 55, 320, Especialidad.BAILE, False, [10, 9, 8, 9]),
+    #             ("Pilates", 50, 200, Especialidad.CORE, False, [8, 9, 7, 8]),
+    #             ("Body Pump", 60, 380, Especialidad.FITNESS, False, [9, 8, 9, 7]),
+    #             ("Aqua Zumba", 45, 280, Especialidad.PISCINA, True, [8, 9, 10]),
+    #             ("Stretching", 30, 150, Especialidad.BODYCARE, False, [7, 8, 9]),
+    #             ("Cardio Dance", 40, 300, Especialidad.CARDIO, False, [9, 8, 7, 8]),
+    #             ("Natación Libre", 60, 400, Especialidad.PISCINA, True, [9, 10, 8])
+    #         ]
+    #         
+    #         for nombre, duracion, calorias, categoria, premium, votos in actividades_datos:
+    #             actividad = Actividad(nombre, duracion, calorias, categoria, premium, votos)
+    #             lista_actividades_total.append(actividad)
+    #         
+    #         # Crear monitores de prueba
+    #         monitores_datos = [
+    #             ("Ana García López", "12345678Z", "Calle Granada 15", "Granada", "Granada", "18001", "666111222", date(1985, 3, 20), ["FITNESS", "CORE"], 2200.0, 15, 2),
+    #             ("Carlos Ruiz Martín", "87654321X", "Avenida Constitución 45", "Granada", "Granada", "18002", "666333444", date(1990, 7, 12), ["PISCINA"], 2000.0, 20, 1),
+    #             ("María Fernández Gil", "11223344B", "Plaza Nueva 8", "Granada", "Granada", "18003", "666555777", date(1988, 11, 5), ["BAILE", "CARDIO"], 2100.0, 18, 3),
+    #             ("Pedro Sánchez Vega", "55667788Z", "Calle Recogidas 23", "Granada", "Granada", "18004", "666888999", date(1982, 2, 28), ["CICLISMO", "HIIT"], 2300.0, 12, 0),
+    #             ("Laura Jiménez Ramos", "99887766P", "Paseo del Salón 12", "Granada", "Granada", "18005", "666222333", date(1992, 9, 18), ["BODYCARE"], 1900.0, 10, 1)
+    #         ]
+    #         
+    #         for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, especialidades, sueldo, pos, neg in monitores_datos:
+    #             monitor = Monitor(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, especialidades, sueldo, pos, neg)
+    #             lista_usuarios_total.append(monitor)
+    #         
+    #         # Crear socios regulares de prueba
+    #         socios_datos = [
+    #             ("Juan Pérez Morales", "22334455Y", "Calle Albaicín 30", "Granada", "Granada", "18006", "666444555", date(1995, 5, 10), date(2023, 1, 15), date(2026, 3, 5), True),
+    #             ("Carmen López Silva", "33445566R", "Avenida Madrid 67", "Granada", "Granada", "18007", "666777888", date(1987, 8, 22), date(2023, 2, 20), date(2026, 2, 28), True),
+    #             ("Roberto García Díaz", "44556677L", "Calle Elvira 45", "Granada", "Granada", "18008", "666999000", date(1993, 12, 8), date(2023, 3, 10), date(2025, 12, 20), False),
+    #             ("Isabel Martín Cruz", "56789012B", "Plaza Trinidad 18", "Granada", "Granada", "18009", "666111333", date(1990, 4, 15), date(2023, 4, 5), date(2026, 3, 1), True),
+    #             ("Miguel Rodríguez Font", "66778899D", "Calle Mesones 22", "Granada", "Granada", "18010", "666222444", date(1985, 10, 30), date(2023, 5, 12), date(2026, 1, 15), True)
+    #         ]
+    #         
+    #         for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo in socios_datos:
+    #             socio = Socio(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo)
+    #             # Asignar algunas actividades a los socios
+    #             if len(lista_actividades_total) > 0:
+    #                 socio.add_actvidad(lista_actividades_total[0])  # Yoga
+    #             if len(lista_actividades_total) > 4:
+    #                 socio.add_actvidad(lista_actividades_total[4])  # HIIT Cardio
+    #             lista_usuarios_total.append(socio)
+    #         
+    #         # Crear socios premium de prueba
+    #         from socioPremium import SocioPremium
+    #         socios_premium_datos = [
+    #             ("Elena Vázquez Herrera", "77889900D", "Calle Alhambra 88", "Granada", "Granada", "18011", "666333555", date(1989, 6, 25), date(2023, 1, 20), date(2026, 3, 8), True),
+    #             ("Francisco Molina Reyes", "88990011K", "Avenida Andalucía 150", "Granada", "Granada", "18012", "666444777", date(1983, 3, 14), date(2023, 2, 15), date(2026, 3, 9), True),
+    #             ("Rocío Castillo Navarro", "99001122Z", "Calle San Jerónimo 35", "Granada", "Granada", "18013", "666555888", date(1991, 9, 7), date(2023, 3, 25), date(2026, 2, 25), True)
+    #         ]
+    #         
+    #         for nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo in socios_premium_datos:
+    #             socio_premium = SocioPremium(nombre, dni, direccion, localidad, provincia, codigo, telefono, fecha_nac, fecha_reg, ultimo_acc, activo)
+    #             # Los socios premium pueden tener actividades premium
+    #             if len(lista_actividades_total) > 1:
+    #                 socio_premium.add_actvidad(lista_actividades_total[1])  # Aqua Aeróbicos (premium)
+    #             if len(lista_actividades_total) > 2:
+    #                 socio_premium.add_actvidad(lista_actividades_total[2])  # CrossFit Intensivo (premium)
+    #             if len(lista_actividades_total) > 6:
+    #                 socio_premium.add_actvidad(lista_actividades_total[6])  # Pilates
+    #             lista_usuarios_total.append(socio_premium)
+    #         
+    #     except Exception as e:
+    #         print(f"Error cargando datos iniciales: {e}")
+    #         # Si hay error, crear al menos datos mínimos
+    #         if not lista_actividades_total:
+    #             actividad_basica = Actividad("Actividad Básica", 30, 200, Especialidad.FITNESS, False, [])
+    #             lista_actividades_total.append(actividad_basica)
+    # =======================================================
 
     @staticmethod
     def mostrar_menu() -> None:
@@ -139,11 +150,10 @@ class ZaidinGym:
         print("="*50)
 
     @staticmethod
-    def menu_gestion_usuarios(lista_usuarios_total : list, lista_actividades_total: list) -> None:
+    def menu_gestion_usuarios(db_manager: DatabaseManager) -> None:
         """Muestra el menú de gestión de usuarios.
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
-            lista_actividades_total (list): La lista de actividades disponibles en el gimnasio.
+            db_manager (DatabaseManager): El gestor de la base de datos.
         """
         while True:
             print("\n" + "-"*40)
@@ -160,35 +170,49 @@ class ZaidinGym:
             opcion = input("\nSeleccione una opción: ").strip()
             
             if opcion == "1":
-                creado = ZaidinGym.crear_usuario(lista_usuarios_total)
+                creado = ZaidinGym.crear_usuario(db_manager)
                 if creado:
-                    print(f"Total de usuarios: {len(lista_usuarios_total)}")
+                    stats = db_manager.obtener_estadisticas()
+                    total_usuarios = stats['total_socios'] + stats['total_monitores']
+                    print(f"Total de usuarios: {total_usuarios}")
                 input("Presione Enter para continuar...")
             elif opcion == "2":
-                eliminado = ZaidinGym.eliminar_usuario(lista_usuarios_total)
+                eliminado = ZaidinGym.eliminar_usuario(db_manager)
                 if eliminado:
-                    print(f"Total de usuarios: {len(lista_usuarios_total)}")
+                    stats = db_manager.obtener_estadisticas()
+                    total_usuarios = stats['total_socios'] + stats['total_monitores']
+                    print(f"Total de usuarios: {total_usuarios}")
                 input("Presione Enter para continuar...")
             elif opcion == "3":
                 print(f"\n Introduzca el DNI del socio para gestionar sus actividades (formato: 12345678A):")
                 dni = input().strip()
-                if dni in [usuario.dni for usuario in lista_usuarios_total if isinstance(usuario, Socio)]:    
-                    #Actualizar último acceso del socio
-                    for usuario in lista_usuarios_total:
-                        if usuario.dni.upper() == dni.upper() and isinstance(usuario, Socio):
-                            usuario.ultimo_acceso = date.today()
-                            break
-                    ZaidinGym.menu_gestion_socios(lista_usuarios_total, lista_actividades_total, dni)
+                socios = db_manager.obtener_todos_socios()
+                socio_encontrado = None
+                for socio in socios:
+                    if socio.dni.upper() == dni.upper():
+                        socio_encontrado = socio
+                        break
+                
+                if socio_encontrado:
+                    # Actualizar último acceso del socio
+                    db_manager.actualizar_ultimo_acceso_socio(dni)
+                    ZaidinGym.menu_gestion_socios(db_manager, dni)
+                else:
+                    print(f"No se encontró ningún socio con el DNI '{dni}'.")
+                    input("Presione Enter para continuar...")
             elif opcion == "4":
                 print(f"\n Introduzca el nombre del monitor para gestionar su perfil:")
                 nombre_monitor = input().strip()
-                if nombre_monitor in [usuario.nombre for usuario in lista_usuarios_total if isinstance(usuario,Monitor)]:
-                    ZaidinGym.menu_gestion_monitores(lista_usuarios_total, nombre_monitor)
+                monitores = db_manager.obtener_todos_monitores()
+                monitor_encontrado = any(monitor.nombre.lower() == nombre_monitor.lower() for monitor in monitores)
+                
+                if monitor_encontrado:
+                    ZaidinGym.menu_gestion_monitores(db_manager, nombre_monitor)
                 else:
                     print(f"No se encontró ningún monitor con el nombre '{nombre_monitor}'.")
                     input("Presione Enter para continuar...")
             elif opcion == "5":
-                invalidar = ZaidinGym.invalidar_socios(lista_usuarios_total)
+                invalidar = ZaidinGym.invalidar_socios(db_manager)
                 if invalidar:
                     print("Socios invalidados correctamente.")
                     for invalido in invalidar:
@@ -203,11 +227,10 @@ class ZaidinGym:
                 input("Presione Enter para continuar...")
 
     @staticmethod
-    def menu_gestion_socios(lista_usuarios_total, lista_actividades_total: list, dni: str) -> None:
+    def menu_gestion_socios(db_manager: DatabaseManager, dni: str) -> None:
         """Muestra el menú de gestión de socios.
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
-            lista_actividades_total (list): La lista de actividades disponibles en el gimnasio.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             dni (str): El DNI del socio a gestionar.
         """
         while True:
@@ -225,28 +248,41 @@ class ZaidinGym:
             opcion = input("\nSeleccione una opción: ").strip()
             
             if opcion == "1":
-                usuario = ZaidinGym.get_usuario_por_dni(lista_usuarios_total, dni)
-                if usuario and isinstance(usuario, Socio):
-                    if len(usuario.lista_actividades) == 0:
+                socios = db_manager.obtener_todos_socios()
+                socio_encontrado = None
+                for socio in socios:
+                    if socio.dni.upper() == dni.upper():
+                        socio_encontrado = socio
+                        break
+                
+                if socio_encontrado:
+                    if len(socio_encontrado._Socio__lista_actividades) == 0:
                         print("\nEl socio no tiene actividades asignadas.")
                     else:
                         print("\nActividades asignadas al socio:")
-                        for idx, actividad in enumerate(usuario.lista_actividades):
+                        for idx, actividad in enumerate(socio_encontrado._Socio__lista_actividades):
                             print(f"{idx + 1}. {actividad.nombre} (Categoría: {actividad.categoria.value}, Kcal: {actividad.calorias})")
                 input("Presione Enter para continuar...")
 
             elif opcion == "2":
-                usuario = ZaidinGym.get_usuario_por_dni(lista_usuarios_total, dni)
-                if usuario and isinstance(usuario, Socio):
+                socios = db_manager.obtener_todos_socios()
+                socio_encontrado = None
+                for socio in socios:
+                    if socio.dni.upper() == dni.upper():
+                        socio_encontrado = socio
+                        break
+                
+                if socio_encontrado:
+                    actividades = db_manager.obtener_todas_actividades()
                     print("\nActividades disponibles:")
-                    for idx, actividad in enumerate(lista_actividades_total):
+                    for idx, actividad in enumerate(actividades):
                         print(f"{idx + 1}. {actividad.nombre} (Categoría: {actividad.categoria.value}, Kcal: {actividad.calorias})")
-                    print(f"\nSeleccione una actividad para añadir al socio (1-{len(lista_actividades_total)}):")
+                    print(f"\nSeleccione una actividad para añadir al socio (1-{len(actividades)}):")
                     seleccion = input().strip()
-                    if seleccion.isdigit() and 1 <= int(seleccion) <= len(lista_actividades_total):
-                        actividad_seleccionada = lista_actividades_total[int(seleccion) - 1]
-                        if usuario.add_actvidad(actividad_seleccionada):
-                            print(f"Actividad '{actividad_seleccionada.nombre}' añadida al socio '{usuario.nombre}'.")
+                    if seleccion.isdigit() and 1 <= int(seleccion) <= len(actividades):
+                        actividad_seleccionada = actividades[int(seleccion) - 1]
+                        if db_manager.agregar_socio_actividad(dni, actividad_seleccionada.nombre):
+                            print(f"Actividad '{actividad_seleccionada.nombre}' añadida al socio '{socio_encontrado.nombre}'.")
                         else:
                             print("No se pudo añadir la actividad al socio.")
                     else:
@@ -254,20 +290,26 @@ class ZaidinGym:
                 input("Presione Enter para continuar...")
 
             elif opcion == "3":
-                usuario = ZaidinGym.get_usuario_por_dni(lista_usuarios_total, dni)
-                if usuario and isinstance(usuario, Socio):
-                    if len(usuario.lista_actividades) == 0:
+                socios = db_manager.obtener_todos_socios()
+                socio_encontrado = None
+                for socio in socios:
+                    if socio.dni.upper() == dni.upper():
+                        socio_encontrado = socio
+                        break
+                
+                if socio_encontrado:
+                    if len(socio_encontrado._Socio__lista_actividades) == 0:
                         print("\nEl socio no tiene actividades asignadas.")
                     else:
                         print("\nActividades asignadas al socio:")
-                        for idx, actividad in enumerate(usuario.lista_actividades):
+                        for idx, actividad in enumerate(socio_encontrado._Socio__lista_actividades):
                             print(f"{idx + 1}. {actividad.nombre} (Categoría: {actividad.categoria.value}, Kcal: {actividad.calorias})")
-                        print(f"\nSeleccione una actividad para eliminar del socio (1-{len(usuario.lista_actividades)}):")
+                        print(f"\nSeleccione una actividad para eliminar del socio (1-{len(socio_encontrado._Socio__lista_actividades)}):")
                         seleccion = input().strip()
-                        if seleccion.isdigit() and 1 <= int(seleccion) <= len(usuario.lista_actividades):
-                            actividad_seleccionada = usuario.lista_actividades[int(seleccion) - 1]
-                            if usuario.del_actividad(actividad_seleccionada):
-                                print(f"Actividad '{actividad_seleccionada.nombre}' eliminada del socio '{usuario.nombre}'.")
+                        if seleccion.isdigit() and 1 <= int(seleccion) <= len(socio_encontrado._Socio__lista_actividades):
+                            actividad_seleccionada = socio_encontrado._Socio__lista_actividades[int(seleccion) - 1]
+                            if db_manager.eliminar_actividad_socio(dni, actividad_seleccionada.nombre):
+                                print(f"Actividad '{actividad_seleccionada.nombre}' eliminada del socio '{socio_encontrado.nombre}'.")
                             else:
                                 print("No se pudo eliminar la actividad del socio.")
                         else:
@@ -275,27 +317,37 @@ class ZaidinGym:
                 input("Presione Enter para continuar...")
 
             elif opcion == "4":
-                actividad = ZaidinGym.seleccionar_actividad_para_valorar(lista_actividades_total)
+                actividades = db_manager.obtener_todas_actividades()
+                actividad = ZaidinGym.seleccionar_actividad_para_valorar(actividades)
                 if actividad:
                     print(f"\nIntroduzca una valoración para la actividad '{actividad.nombre}' (0-10):")
                     valoracion = input().strip()
                     if valoracion.isdigit() and 0 <= int(valoracion) <= 10:
-                        actividad.votar(int(valoracion))
-                        print(f"Gracias por valorar la actividad '{actividad.nombre}' con {valoracion} puntos.")
+                        if db_manager.agregar_voto_actividad(actividad.nombre, int(valoracion)):
+                            print(f"Gracias por valorar la actividad '{actividad.nombre}' con {valoracion} puntos.")
+                        else:
+                            print("Error al registrar la valoración.")
                     else:
                         print("Valoración no válida. Debe ser un número entre 0 y 10.")
                 input("Presione Enter para continuar...")
 
             elif opcion == "5":
-                usuario = ZaidinGym.get_usuario_por_dni(lista_usuarios_total, dni)
-                if usuario and isinstance(usuario, Socio) and not isinstance(usuario, SocioPremium):
-                    nuevo_premium = SocioPremium(usuario.nombre, usuario.dni, usuario.direccion, usuario.localidad, usuario.provincia,
-                                                usuario.codigo_postal, usuario.telefono, usuario.fecha_nacimiento, usuario.fecha_registro,
-                                                usuario.ultimo_acceso, usuario.esta_activo)
-                    nuevo_premium.lista_actividades = usuario.lista_actividades.copy()
-                    lista_usuarios_total.remove(usuario)
-                    lista_usuarios_total.append(nuevo_premium)
-                    print(f"El socio '{usuario.nombre}' ha sido convertido en socio premium.")
+                socios = db_manager.obtener_todos_socios()
+                socio_encontrado = None
+                for socio in socios:
+                    if socio.dni.upper() == dni.upper():
+                        socio_encontrado = socio
+                        break
+                
+                if socio_encontrado and not isinstance(socio_encontrado, SocioPremium):
+                    if db_manager.convertir_socio_a_premium(dni):
+                        print(f"El socio '{socio_encontrado.nombre}' ha sido convertido en socio premium.")
+                    else:
+                        print("Error al convertir el socio a premium.")
+                elif isinstance(socio_encontrado, SocioPremium):
+                    print("El socio ya es premium.")
+                else:
+                    print("Socio no encontrado.")
                 input("Presione Enter para continuar...")
             elif opcion == "6":
                 break
@@ -304,10 +356,10 @@ class ZaidinGym:
                 input("Presione Enter para continuar...")
 
     @staticmethod
-    def menu_gestion_monitores(lista_usuarios_total: list, nombre_monitor: str) -> None:
+    def menu_gestion_monitores(db_manager: DatabaseManager, nombre_monitor: str) -> None:
         """Muestra el menú de gestión de monitores.
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             nombre_monitor (str): El nombre del monitor a gestionar.
         """
         while True:
@@ -323,21 +375,21 @@ class ZaidinGym:
             opcion = input("\nSeleccione una opción: ").strip()
             
             if opcion == "1":
-                actualizado = ZaidinGym.actualizar_sueldo_monitor(lista_usuarios_total, nombre_monitor)
+                actualizado = ZaidinGym.actualizar_sueldo_monitor(db_manager, nombre_monitor)
                 if actualizado:
                     print(f"Sueldo del monitor '{nombre_monitor}' actualizado correctamente.")
                 else:
                     print(f"No se pudo actualizar el sueldo del monitor '{nombre_monitor}'.")
                 input("Presione Enter para continuar...")
             elif opcion == "2":
-                actualizado = ZaidinGym.actualizar_especialidad_monitor(lista_usuarios_total, nombre_monitor)
+                actualizado = ZaidinGym.actualizar_especialidad_monitor(db_manager, nombre_monitor)
                 if actualizado:
                     print(f"Especialidad del monitor '{nombre_monitor}' actualizada correctamente.")
                 else:
                     print(f"No se pudo actualizar la especialidad del monitor '{nombre_monitor}'.")
                 input("Presione Enter para continuar...")
             elif opcion == "3":
-                valorado = ZaidinGym.valorar_monitor(lista_usuarios_total, nombre_monitor)
+                valorado = ZaidinGym.valorar_monitor(db_manager, nombre_monitor)
                 if valorado:
                     print(f"Gracias por valorar al monitor '{nombre_monitor}'.")
                 else:
@@ -350,11 +402,10 @@ class ZaidinGym:
                 input("Presione Enter para continuar...")
 
     @staticmethod
-    def menu_gestion_actividades(lista_actividades_total: list, lista_usuarios_total: list) -> None:
+    def menu_gestion_actividades(db_manager: DatabaseManager) -> None:
         """Muestra el menú de gestión de actividades.
         Args:
-            lista_actividades_total (list): La lista de actividades del gimnasio.
-            lista_usuarios_total (list): La lista de usuarios del gimnasio.
+            db_manager (DatabaseManager): El gestor de la base de datos.
         """
         while True:
             print("\n" + "-"*40)
@@ -368,14 +419,16 @@ class ZaidinGym:
             opcion = input("\nSeleccione una opción: ").strip()
             
             if opcion == "1":
-                creada = ZaidinGym.crear_actividad(lista_actividades_total)
+                creada = ZaidinGym.crear_actividad(db_manager)
                 if creada:
-                    print(f"Total de actividades: {len(lista_actividades_total)}")
+                    stats = db_manager.obtener_estadisticas()
+                    print(f"Total de actividades: {stats['total_actividades']}")
                 input("Presione Enter para continuar...")
             elif opcion == "2":
-                eliminada = ZaidinGym.eliminar_actividad(lista_actividades_total, lista_usuarios_total)
+                eliminada = ZaidinGym.eliminar_actividad(db_manager)
                 if eliminada:
-                    print(f"Total de actividades: {len(lista_actividades_total)}")
+                    stats = db_manager.obtener_estadisticas()
+                    print(f"Total de actividades: {stats['total_actividades']}")
                 input("Presione Enter para continuar...")
             elif opcion == "3":
                 break
@@ -384,11 +437,10 @@ class ZaidinGym:
                 input("Presione Enter para continuar...")
 
     @staticmethod
-    def menu_consultas_estadisticas(lista_usuarios_total: list, lista_actividades_total: list) -> None:
+    def menu_consultas_estadisticas(db_manager: DatabaseManager) -> None:
         """Muestra el menú de consultas y estadísticas.
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio.
-            lista_actividades_total (list): La lista de actividades del gimnasio.
+            db_manager (DatabaseManager): El gestor de la base de datos.
         """
         while True:
             print("\n" + "-"*40)
@@ -406,15 +458,24 @@ class ZaidinGym:
             
             if opcion == "1":
                 print("\nPersonas existentes en el gimnasio:")
-                for usuario in lista_usuarios_total:
-                    print(f"- {usuario.nombre} (DNI: {usuario.dni}, Tipo: {'Monitor' if isinstance(usuario, Monitor) else 'Socio'})")
+                socios = db_manager.obtener_todos_socios()
+                monitores = db_manager.obtener_todos_monitores()
+                
+                for socio in socios:
+                    tipo = "Socio Premium" if isinstance(socio, SocioPremium) else "Socio"
+                    print(f"- {socio.nombre} (DNI: {socio.dni}, Tipo: {tipo})")
+                
+                for monitor in monitores:
+                    print(f"- {monitor.nombre} (DNI: {monitor.dni}, Tipo: Monitor)")
+                
                 input("Presione Enter para continuar...")
             elif opcion == "2":
                 print("Cuantas actividades desea listar?")
                 n_str = input().strip()
                 if n_str.isdigit() and int(n_str) > 0:
                     n = int(n_str)
-                    actividades_ordenadas = sorted(lista_actividades_total, key=lambda a: a.calcular_valoracion(), reverse=True)
+                    actividades = db_manager.obtener_todas_actividades()
+                    actividades_ordenadas = sorted(actividades, key=lambda a: a.calcular_valoracion(), reverse=True)
                     print(f"\nLas {n} mejores actividades:")
                     for idx, actividad in enumerate(actividades_ordenadas[:n]):
                         print(f"{idx + 1}. {actividad.nombre} (Valoración: {actividad.calcular_valoracion()}, Categoría: {actividad.categoria.value}, Kcal: {actividad.calorias})")
@@ -426,9 +487,10 @@ class ZaidinGym:
                 n_str = input().strip()
                 if n_str.isdigit() and int(n_str) > 0:
                     n = int(n_str)
-                    categorias = set(actividad.categoria for actividad in lista_actividades_total)
+                    actividades = db_manager.obtener_todas_actividades()
+                    categorias = set(actividad.categoria for actividad in actividades)
                     for categoria in categorias:
-                        actividades_categoria = [a for a in lista_actividades_total if a.categoria == categoria]
+                        actividades_categoria = [a for a in actividades if a.categoria == categoria]
                         actividades_ordenadas = sorted(actividades_categoria, key=lambda a: a.calcular_valoracion(), reverse=True)
                         print(f"\nLas {n} mejores actividades de la categoría '{categoria.value}':")
                         for idx, actividad in enumerate(actividades_ordenadas[:n]):
@@ -441,7 +503,8 @@ class ZaidinGym:
                 n_str = input().strip()
                 if n_str.isdigit() and int(n_str) > 0:
                     n = int(n_str)
-                    actividades_ordenadas = sorted(lista_actividades_total, key=lambda a: a.calorias, reverse=True)
+                    actividades = db_manager.obtener_todas_actividades()
+                    actividades_ordenadas = sorted(actividades, key=lambda a: a.calorias, reverse=True)
                     print(f"\nLas {n} mejores actividades por kcal:")
                     for idx, actividad in enumerate(actividades_ordenadas[:n]):
                         print(f"{idx + 1}. {actividad.nombre} (Kcal: {actividad.calorias}, Valoración: {actividad.calcular_valoracion()}, Categoría: {actividad.categoria.value})")
@@ -453,7 +516,7 @@ class ZaidinGym:
                 n_str = input().strip()
                 if n_str.isdigit() and int(n_str) > 0:
                     n = int(n_str)
-                    monitores = [usuario for usuario in lista_usuarios_total if isinstance(usuario, Monitor)]
+                    monitores = db_manager.obtener_todos_monitores()
                     monitores_ordenados = sorted(monitores, key=lambda m: m.calcular_valoracion(), reverse=True)
                     print(f"\nLos {n} mejores monitores:")
                     for idx, monitor in enumerate(monitores_ordenados[:n]):
@@ -590,10 +653,10 @@ class ZaidinGym:
             print("Por favor, inténtelo de nuevo.")
 
     @staticmethod
-    def crear_usuario(lista_usuarios: list) -> None:
-        """Crea un nuevo usuario (socio, socio premium o monitor) y lo agrega a la lista
+    def crear_usuario(db_manager: DatabaseManager) -> bool:
+        """Crea un nuevo usuario (socio, socio premium o monitor) y lo guarda en la base de datos
         Args:            
-            lista_usuarios (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            db_manager (DatabaseManager): El gestor de la base de datos.
         Returns:
             bool: True si el usuario se creó correctamente, False en caso de error.
         """
@@ -670,15 +733,23 @@ class ZaidinGym:
             if tipo_usuario == "1":
                 nuevo_usuario = Socio(nombre, dni, direccion, localidad, provincia, codigo_postal,
                                     telefono, fecha_nacimiento, fecha_registro, ultimo_acceso, esta_activo)
-                lista_usuarios.append(nuevo_usuario)
-                print("\n✓ Socio creado exitosamente.")
-                return True
+                resultado = db_manager.insertar_socio(nuevo_usuario)
+                if resultado:
+                    print("\n✓ Socio creado exitosamente.")
+                    return True
+                else:
+                    print("\n✗ Error al crear el socio.")
+                    return False
             elif tipo_usuario == "2":
                 nuevo_usuario = SocioPremium(nombre, dni, direccion, localidad, provincia, codigo_postal,
                                     telefono, fecha_nacimiento, fecha_registro, ultimo_acceso, esta_activo)
-                lista_usuarios.append(nuevo_usuario)
-                print("\n✓ Socio premium creado exitosamente.")
-                return True
+                resultado = db_manager.insertar_socio(nuevo_usuario)
+                if resultado:
+                    print("\n✓ Socio premium creado exitosamente.")
+                    return True
+                else:
+                    print("\n✗ Error al crear el socio premium.")
+                    return False
             elif tipo_usuario == "3":
                 # Validaciones específicas para Monitor
                 while True:
@@ -709,9 +780,13 @@ class ZaidinGym:
                 
                 nuevo_usuario = Monitor(nombre, dni, direccion, localidad, provincia, codigo_postal,
                                     telefono, fecha_nacimiento, especialidad, sueldo, votos_positivos, votos_negativos)
-                lista_usuarios.append(nuevo_usuario)
-                print("\n✓ Monitor creado exitosamente.")
-                return True
+                resultado = db_manager.insertar_monitor(nuevo_usuario)
+                if resultado:
+                    print("\n✓ Monitor creado exitosamente.")
+                    return True
+                else:
+                    print("\n✗ Error al crear el monitor.")
+                    return False
                 
         except Exception as e:
             print(f"Error al crear el usuario: {e}")
@@ -757,10 +832,10 @@ class ZaidinGym:
         return None
 
     @staticmethod
-    def eliminar_usuario(lista_usuarios_total: list) -> bool:
-        """Elimina un usuario de la lista por su DNI
+    def eliminar_usuario(db_manager: DatabaseManager) -> bool:
+        """Elimina un usuario de la base de datos por su DNI
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            db_manager (DatabaseManager): El gestor de la base de datos.
         
         Returns:
             bool: True si el usuario se eliminó correctamente, False si no se encontró el usuario o hubo un error.
@@ -771,30 +846,44 @@ class ZaidinGym:
             ZaidinGym.validar_dni
         )
 
-        for usuario in lista_usuarios_total:
-            if usuario.dni.upper() == dni.upper():
-                print(f"\nUsuario encontrado: {usuario.nombre} (DNI: {usuario.dni})")
-                confirmacion = input("¿Está seguro que desea eliminar este usuario? (s/n): ").strip().lower()
-                if confirmacion == "s":
-                    break
-                else:
-                    print("Eliminación cancelada.")
-                    return False
+        # Buscar usuario en socios
+        socios = db_manager.obtener_todos_socios()
+        usuario_encontrado = None
+        for socio in socios:
+            if socio.dni.upper() == dni.upper():
+                usuario_encontrado = socio
+                break
         
-        for i, usuario in enumerate(lista_usuarios_total):
-            if usuario.dni.upper() == dni.upper():
-                del lista_usuarios_total[i]
-                print(f"\nUsuario con DNI {dni} eliminado exitosamente.")
-                return True
+        # Si no se encontró en socios, buscar en monitores
+        if not usuario_encontrado:
+            monitores = db_manager.obtener_todos_monitores()
+            for monitor in monitores:
+                if monitor.dni.upper() == dni.upper():
+                    usuario_encontrado = monitor
+                    break
+
+        if usuario_encontrado:
+            print(f"\nUsuario encontrado: {usuario_encontrado.nombre} (DNI: {usuario_encontrado.dni})")
+            confirmacion = input("¿Está seguro que desea eliminar este usuario? (s/n): ").strip().lower()
+            if confirmacion == "s":
+                if db_manager.eliminar_usuario(dni):
+                    print(f"\nUsuario con DNI {dni} eliminado exitosamente.")
+                    return True
+                else:
+                    print(f"\nError al eliminar el usuario con DNI {dni}.")
+                    return False
+            else:
+                print("Eliminación cancelada.")
+                return False
         
         print(f"\nError: No se encontró ningún usuario con DNI {dni}.")
         return False
     
     @staticmethod
-    def invalidar_socios(lista_usuarios_total: list) -> list[Socio] | None:
+    def invalidar_socios(db_manager: DatabaseManager) -> list[Socio] | None:
         """Invalida socios que no han accedido en el último mes
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             
         Returns:
             list[Socio] | None: Una lista de socios que fueron invalidados, o None si no se encontraron socios para invalidar.
@@ -802,12 +891,14 @@ class ZaidinGym:
         hoy = date.today()
         socios_invalidados = []
         
-        for usuario in lista_usuarios_total:
-            if isinstance(usuario, Socio) and usuario.esta_activo:
-                dias_desde_ultimo_acceso = (hoy - usuario.ultimo_acceso).days
+        socios = db_manager.obtener_todos_socios()
+        for socio in socios:
+            if socio.esta_activo:
+                dias_desde_ultimo_acceso = (hoy - socio.ultimo_acceso).days
                 if dias_desde_ultimo_acceso > 30:
-                    usuario.esta_activo = False
-                    socios_invalidados.append(usuario)
+                    if db_manager.invalidar_socio(socio.dni):
+                        socio.esta_activo = False  # Actualizar objeto local
+                        socios_invalidados.append(socio)
         
         if socios_invalidados:
             return socios_invalidados
@@ -815,78 +906,91 @@ class ZaidinGym:
             return None
         
     @staticmethod
-    def seleccionar_actividad_para_valorar(lista_actividades_total: list) -> Actividad | None:
+    def seleccionar_actividad_para_valorar(actividades: list) -> Actividad | None:
         """Permite al usuario seleccionar una actividad de la lista para valorar
         Args:
-            lista_actividades_total (list): La lista de actividades disponibles en el gimnasio.
+            actividades (list): La lista de actividades disponibles en el gimnasio.
         
         Returns:
             Actividad | None: La actividad seleccionada por el usuario, o None si no se seleccionó ninguna actividad válida.
         """
-        if not lista_actividades_total:
+        if not actividades:
             print("No hay actividades disponibles para valorar.")
             return None
         
         print("\nActividades disponibles para valorar:")
-        for idx, actividad in enumerate(lista_actividades_total):
+        for idx, actividad in enumerate(actividades):
             print(f"{idx + 1}. {actividad.nombre} (Categoría: {actividad.categoria.value}, Kcal: {actividad.calorias})")
         
         while True:
-            print(f"\nSeleccione una actividad para valorar (1-{len(lista_actividades_total)}), o 0 para cancelar:")
+            print(f"\nSeleccione una actividad para valorar (1-{len(actividades)}), o 0 para cancelar:")
             seleccion = input().strip()
             if seleccion == "0":
                 print("Valoración cancelada.")
                 return None
-            if seleccion.isdigit() and 1 <= int(seleccion) <= len(lista_actividades_total):
-                actividad_seleccionada = lista_actividades_total[int(seleccion) - 1]
+            if seleccion.isdigit() and 1 <= int(seleccion) <= len(actividades):
+                actividad_seleccionada = actividades[int(seleccion) - 1]
                 print(f"Has seleccionado: {actividad_seleccionada.nombre}")
                 return actividad_seleccionada
             else:
                 print("Selección no válida. Por favor, inténtelo de nuevo.")
 
     @staticmethod
-    def actualizar_sueldo_monitor(lista_usuarios_total: list, nombre_monitor: str) -> bool:
+    def actualizar_sueldo_monitor(db_manager: DatabaseManager, nombre_monitor: str) -> bool:
         """Actualiza el sueldo de un monitor específico
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             nombre_monitor (str): El nombre del monitor al que se le actualizará el sueldo.
         
         Returns:
             bool: True si el sueldo se actualizó correctamente, False si no se encontró el monitor o hubo un error.
         """
-        usuario = ZaidinGym.get_usuario_por_nombre(lista_usuarios_total, nombre_monitor)
+        monitores = db_manager.obtener_todos_monitores()
+        monitor_encontrado = None
+        for monitor in monitores:
+            if monitor.nombre.lower() == nombre_monitor.lower():
+                monitor_encontrado = monitor
+                break
         
-        if usuario and isinstance(usuario, Monitor):
+        if monitor_encontrado:
             while True:
-                print(f"\nIntroduzca el nuevo sueldo para el monitor '{usuario.nombre}':")
+                print(f"\nIntroduzca el nuevo sueldo para el monitor '{monitor_encontrado.nombre}':")
                 sueldo_str = input().strip()
                 if not ZaidinGym.validar_campo_vacio(sueldo_str, "El sueldo"):
                     continue
                 es_valido, nuevo_sueldo = ZaidinGym.validar_sueldo(sueldo_str)
                 if es_valido:
-                    usuario.sueldo = nuevo_sueldo
-                    print(f"Sueldo del monitor '{usuario.nombre}' actualizado a {nuevo_sueldo}.")
-                    return True
+                    if db_manager.actualizar_sueldo_monitor(monitor_encontrado.nombre, nuevo_sueldo):
+                        print(f"Sueldo del monitor '{monitor_encontrado.nombre}' actualizado a {nuevo_sueldo}.")
+                        return True
+                    else:
+                        print("Error al actualizar el sueldo en la base de datos.")
+                        return False
                 print("Por favor, inténtelo de nuevo.")
         
         print(f"No se encontró ningún monitor con el nombre '{nombre_monitor}'.")
         return False
 
     @staticmethod
-    def actualizar_especialidad_monitor(lista_usuarios_total: list, nombre_monitor: str) -> bool:
+    def actualizar_especialidad_monitor(db_manager: DatabaseManager, nombre_monitor: str) -> bool:
         """Actualiza la especialidad de un monitor específico
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             nombre_monitor (str): El nombre del monitor al que se le actualizará la especialidad.
         
         Returns:
             bool: True si la especialidad se actualizó correctamente, False si no se encontró el monitor o hubo un error.
         """
-        usuario = ZaidinGym.get_usuario_por_nombre(lista_usuarios_total, nombre_monitor)
+        monitores = db_manager.obtener_todos_monitores()
+        monitor_encontrado = None
+        for monitor in monitores:
+            if monitor.nombre.lower() == nombre_monitor.lower():
+                monitor_encontrado = monitor
+                break
         
-        if usuario and isinstance(usuario, Monitor):
+        if monitor_encontrado:
             while True:
-                print(f"\nIntroduzca las nuevas especialidades para el monitor '{usuario.nombre}' (separadas por comas):")
+                print(f"\nIntroduzca las nuevas especialidades para el monitor '{monitor_encontrado.nombre}' (separadas por comas):")
                 especialidad_str = input().strip()
                 if not ZaidinGym.validar_campo_vacio(especialidad_str, "Las especialidades"):
                     continue
@@ -894,49 +998,60 @@ class ZaidinGym:
                 if ZaidinGym.validar_especialidad(especialidad):
                     # Limpiar especialidades
                     especialidad = [esp.strip() for esp in especialidad if esp.strip()]
-                    usuario.especialidad = especialidad
-                    print(f"Especialidades del monitor '{usuario.nombre}' actualizadas a: {', '.join(especialidad)}.")
-                    return True
+                    if db_manager.actualizar_especialidades_monitor(monitor_encontrado.nombre, especialidad):
+                        print(f"Especialidades del monitor '{monitor_encontrado.nombre}' actualizadas a: {', '.join(especialidad)}.")
+                        return True
+                    else:
+                        print("Error al actualizar las especialidades en la base de datos.")
+                        return False
                 print("Por favor, inténtelo de nuevo.")
         
         print(f"No se encontró ningún monitor con el nombre '{nombre_monitor}'.")
         return False
     
     @staticmethod
-    def valorar_monitor(lista_usuarios_total: list, nombre_monitor: str) -> bool:
+    def valorar_monitor(db_manager: DatabaseManager, nombre_monitor: str) -> bool:
         """Permite valorar a un monitor específico
         Args:
-            lista_usuarios_total (list): La lista de usuarios del gimnasio, que incluye tanto socios como monitores.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             nombre_monitor (str): El nombre del monitor a valorar.
         
         Returns:
             bool: True si el monitor se valoró correctamente, False si no se encontró el monitor o hubo un error.
         """
-        usuario = ZaidinGym.get_usuario_por_nombre(lista_usuarios_total, nombre_monitor)
+        monitores = db_manager.obtener_todos_monitores()
+        monitor_encontrado = None
+        for monitor in monitores:
+            if monitor.nombre.lower() == nombre_monitor.lower():
+                monitor_encontrado = monitor
+                break
         
-        if usuario and isinstance(usuario, Monitor):
+        if monitor_encontrado:
             while True:
-                print(f"\nIntroduzca una valoración para el monitor '{usuario.nombre}' (0-10):")
+                print(f"\nIntroduzca una valoración para el monitor '{monitor_encontrado.nombre}' (0-10):")
                 valoracion_str = input().strip()
                 if valoracion_str.isdigit() and 0 <= int(valoracion_str) <= 10:
                     valoracion = int(valoracion_str)
-                    if valoracion >= 5:
-                        usuario.votos_positivos += 1
-                        print(f"Gracias por valorar positivamente al monitor '{usuario.nombre}'.")
+                    voto_positivo = valoracion >= 5
+                    if db_manager.actualizar_votos_monitor(monitor_encontrado.nombre, voto_positivo):
+                        if voto_positivo:
+                            print(f"Gracias por valorar positivamente al monitor '{monitor_encontrado.nombre}'.")
+                        else:
+                            print(f"Gracias por valorar negativamente al monitor '{monitor_encontrado.nombre}'.")
+                        return True
                     else:
-                        usuario.votos_negativos += 1
-                        print(f"Gracias por valorar negativamente al monitor '{usuario.nombre}'.")
-                    return True
+                        print("Error al actualizar la valoración en la base de datos.")
+                        return False
                 print("Valoración no válida. Debe ser un número entre 0 y 10.")
         
         print(f"No se encontró ningún monitor con el nombre '{nombre_monitor}'.")
         return False
 
     @staticmethod
-    def crear_actividad(lista_actividades_total: list) -> bool:
+    def crear_actividad(db_manager: DatabaseManager) -> bool:
         """Función para crear una nueva actividad.
         Args:
-            lista_actividades_total (list): La lista de actividades del gimnasio.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             
         Returns:
             bool: True si la actividad se creó correctamente, False en caso contrario.
@@ -955,7 +1070,8 @@ class ZaidinGym:
                 continue
             
             # Verificar si ya existe una actividad con ese nombre
-            if any(actividad.nombre.lower() == nombre.lower() for actividad in lista_actividades_total):
+            actividades_existentes = db_manager.obtener_todas_actividades()
+            if any(actividad.nombre.lower() == nombre.lower() for actividad in actividades_existentes):
                 print(f"Error: Ya existe una actividad con el nombre '{nombre}'.")
                 continue
             break
@@ -1023,28 +1139,32 @@ class ZaidinGym:
         try:
             # Crear la nueva actividad (inicializar votos como lista vacía)
             nueva_actividad = Actividad(nombre, duracion, calorias, categoria, es_premium, [])
-            lista_actividades_total.append(nueva_actividad)
+            resultado = db_manager.insertar_actividad(nueva_actividad)
             
-            print(f"\n¡Actividad '{nombre}' creada exitosamente!")
-            print(f"Detalles: {duracion} min, {calorias} kcal, {categoria.value}, {'Premium' if es_premium else 'Regular'}")
-            return True
+            if resultado:
+                print(f"\n¡Actividad '{nombre}' creada exitosamente!")
+                print(f"Detalles: {duracion} min, {calorias} kcal, {categoria.value}, {'Premium' if es_premium else 'Regular'}")
+                return True
+            else:
+                print(f"\nError al guardar la actividad en la base de datos.")
+                return False
             
         except ValueError as e:
             print(f"\nError al crear la actividad: {e}")
             return False
     
     @staticmethod
-    def eliminar_actividad(lista_actividades_total: list, lista_usuarios_total: list) -> bool:
+    def eliminar_actividad(db_manager: DatabaseManager) -> bool:
         """Función para eliminar una actividad existente.
         Solo se puede eliminar si no hay socios que la tengan asignada.
         Args:
-            lista_actividades_total (list): La lista de actividades del gimnasio.
-            lista_usuarios_total (list): La lista de usuarios del gimnasio.
+            db_manager (DatabaseManager): El gestor de la base de datos.
             
         Returns:
             bool: True si la actividad se eliminó correctamente, False en caso contrario.
         """
-        if not lista_actividades_total:
+        actividades = db_manager.obtener_todas_actividades()
+        if not actividades:
             print("\nNo hay actividades disponibles para eliminar.")
             return False
         
@@ -1054,12 +1174,12 @@ class ZaidinGym:
         
         # Mostrar lista de actividades disponibles
         print("\nActividades disponibles:")
-        for idx, actividad in enumerate(lista_actividades_total, 1):
+        for idx, actividad in enumerate(actividades, 1):
             print(f"{idx}. {actividad.nombre} (Categoría: {actividad.categoria.value}, Duración: {actividad.duracion} min, Calorías: {actividad.calorias})")
         
         # Solicitar selección de actividad
         while True:
-            seleccion_str = input(f"\nSeleccione la actividad a eliminar (1-{len(lista_actividades_total)}) o 0 para cancelar: ").strip()
+            seleccion_str = input(f"\nSeleccione la actividad a eliminar (1-{len(actividades)}) o 0 para cancelar: ").strip()
             if not ZaidinGym.validar_campo_vacio(seleccion_str, "La selección"):
                 continue
             
@@ -1068,20 +1188,23 @@ class ZaidinGym:
                 if seleccion == 0:
                     print("Operación cancelada.")
                     return False
-                elif 1 <= seleccion <= len(lista_actividades_total):
-                    actividad_seleccionada = lista_actividades_total[seleccion - 1]
+                elif 1 <= seleccion <= len(actividades):
+                    actividad_seleccionada = actividades[seleccion - 1]
                     break
                 else:
-                    print(f"Error: Seleccione un número entre 0 y {len(lista_actividades_total)}.")
+                    print(f"Error: Seleccione un número entre 0 y {len(actividades)}.")
             except ValueError:
                 print("Error: Introduzca un número válido.")
         
         # Verificar si hay socios que tengan esta actividad asignada
+        socios = db_manager.obtener_todos_socios()
         socios_con_actividad = []
-        for usuario in lista_usuarios_total:
-            if isinstance(usuario, Socio) and hasattr(usuario, 'lista_actividades'):
-                if actividad_seleccionada in usuario.lista_actividades:
-                    socios_con_actividad.append(usuario)
+        for socio in socios:
+            if hasattr(socio, '_Socio__lista_actividades'):
+                for actividad in socio._Socio__lista_actividades:
+                    if actividad.nombre == actividad_seleccionada.nombre:
+                        socios_con_actividad.append(socio)
+                        break
         
         # Si hay socios con la actividad, no se puede eliminar
         if socios_con_actividad:
@@ -1105,14 +1228,17 @@ class ZaidinGym:
             else:
                 print("Error: Introduzca 's' para sí o 'n' para no.")
         
-        # Eliminar la actividad de la lista principal
+        # Eliminar la actividad
         try:
-            lista_actividades_total.remove(actividad_seleccionada)
-            print(f"\n¡Actividad '{actividad_seleccionada.nombre}' eliminada exitosamente!")
-            return True
+            if db_manager.eliminar_actividad(actividad_seleccionada.nombre):
+                print(f"\n¡Actividad '{actividad_seleccionada.nombre}' eliminada exitosamente!")
+                return True
+            else:
+                print(f"\nError al eliminar la actividad '{actividad_seleccionada.nombre}'.")
+                return False
             
-        except ValueError:
-            print(f"\nError: No se pudo eliminar la actividad '{actividad_seleccionada.nombre}'.")
+        except Exception as e:
+            print(f"\nError: No se pudo eliminar la actividad '{actividad_seleccionada.nombre}': {e}")
             return False
     
 
